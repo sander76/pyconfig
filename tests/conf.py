@@ -1,11 +1,13 @@
+"""Helper."""
+
 import logging
 
-from pydantic import BaseSettings
+from pydantic_loader.config import PydanticConfig
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DummyConfig(BaseSettings):
+class DummyConfig(PydanticConfig):
     a: int = 1
     b: str = "ABC"
 

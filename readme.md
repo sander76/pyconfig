@@ -4,63 +4,27 @@
 
 Configuration management using pydantic and a bit of sugar.
 
-This library provides a loadconfig and saveconfig method to easily load and save python app configurations.
+This library provides a load and save method for pydantic config settings.
 
 
 ```python
-# config.py file
+"""Small example"""
+from pydantic_loader import PydanticConfig
 
-from pydantic import BaseSettings
 
-
-class DummyConfig(BaseSettings):
-    """An app configuration class"""
+class DummyConfig(PydanticConfig):
+    """An app configuration class
+    
+    Define this class according to pydantic BaseSettings.
+    """
 
     a: int = 1
     b: str = "ABC"
 
+# Load a json file with config data and include it in the DummyConfig.
+config = DummyConfig.load_config("a json config file.json")
 
-# The parameter to which the above instance will be assigned to.
-CONFIG: DummyConfig
-
-```
-
-```
-Load a default config
-
->>> import config
->>> from pyconfig.config import load_config
->>> config.CONFIG = load_config(config.DummyConfig)
->>> config.CONFIG
-
-DummyConfig(a=1, b='ABC')
-```
-
-```
->>> import config
->>> from pyconfig.config import load_config
->>> from pathlib import Path
-
->>> config_file = Path("A_CONFIG_FILE.json")
->>> config.CONFIG = load_config(config.DummyConfig,config_file)
-
-Load failed. Config file A_CONFIG_FILE.json does not exist. LOADING DEFAULTS 
-
->>> config.CONFIG
-
-DummyConfig(a=1, b='ABC')
-
-```
-
-```
->>> config.CONFIG=load_config(config.DummyConfig,config_file,on_error_return_default=False)
-
-Traceback (most recent call last):
-  File "<input>", line 1, in <module>
-  File "C:\Users\sander\Dropbox\data\aptana\pyconfig\pyconfig\config.py", line 55, in load_config
-    conf_data = _load_json(config_file)
-  File "C:\Users\sander\Dropbox\data\aptana\pyconfig\pyconfig\config.py", line 21, in _load_json
-    raise CfgError(f"Load failed. Config file {config_file} does not exist.")
-pyconfig.config.CfgError: Load failed. Config file A_CONFIG_FILE.json does not exist.
-
+# Providing a non existing file will raise a CfgError
+# It will return a default instance of the config class when on_error_return_default=True
+config = DummyConfig.load_config("invalid_file.json", on_error_return_default=True)
 ```

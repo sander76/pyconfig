@@ -9,6 +9,8 @@ from pydantic import BaseSettings, ValidationError
 
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = ["CfgError", "PydanticConfig", "save_config"]
+
 
 class CfgError(Exception):
     pass
@@ -27,43 +29,43 @@ def _load_json(config_file: Union[Path, PathLike]) -> dict:
             raise CfgError(f"Error parsing json file {config_file}")
 
 
-def load_config(
-    config: Type[BaseSettings],
-    config_file: Optional[Path] = None,
-    on_error_return_default=True,
-):
-    """Load a json config file and merge it into the config class
+class PydanticConfig(BaseSettings):
+    """Base class for config settings."""
 
-    Args:
-        config: The config object to instantiate
-        config_file: An optional config json file location
-        on_error_return_default: By default loading is forgiving. On failure it will load
-            default settings. Otherwise it will raise CfgError.
+    @classmethod
+    def load_config(
+        cls, config_file: Optional[Path] = None, on_error_return_default=False
+    ):
+        """Load a json config file and merge it into the config class.
 
-    Returns:
-        A config instance
+        Args:
+            config_file: An optional config json file location.
+            on_error_return_default: By default loading is forgiving. On failure it will load
+                default settings. Otherwise it will raise CfgError.
 
+        Returns:
+            A config instance
 
-    raises:
-        CfgError when loading fails.
-    """
-    conf_data = {}
-    if config_file is not None:
+        raises:
+            CfgError when loading fails and on_error_return_default is False.
+        """
+        conf_data = {}
+        if config_file is not None:
+            try:
+                conf_data = _load_json(config_file)
+            except CfgError as err:
+                if not on_error_return_default:
+                    raise
+                else:
+                    _LOGGER.error(f"{err} LOADING DEFAULTS ")
         try:
-            conf_data = _load_json(config_file)
-        except CfgError as err:
+            instance = cls(**conf_data)
+        except ValidationError as err:
+            _LOGGER.error(err)
             if not on_error_return_default:
-                raise
-            else:
-                _LOGGER.error(f"{err} LOADING DEFAULTS ")
-    try:
-        instance = config(**conf_data)
-    except ValidationError as err:
-        _LOGGER.error(err)
-        if not on_error_return_default:
-            raise CfgError(str(err))
-        instance = config()
-    return instance
+                raise CfgError(str(err))
+            instance = cls()
+        return instance
 
 
 def save_config(config: BaseSettings, config_file: Path):
