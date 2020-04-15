@@ -1,4 +1,4 @@
-"""pydantic loader module"""
+"""pydantic loader module."""
 
 from pydantic_loader.config import *
 
