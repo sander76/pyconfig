@@ -3,10 +3,12 @@ import logging
 from importlib import reload
 
 import pytest
+import toml
 
 from pydantic_loader import save_config
-from pydantic_loader.config import CfgError
+from pydantic_loader.config import CfgError, save_toml
 from tests import conf
+from tests.conf import DummyConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,12 +23,30 @@ dummy_js = {"a": 2, "b": "DEF"}
 invalid_dummy_js = {"a": 10, "c": 5}
 
 
-@pytest.fixture
-def config_file(tmp_path):
+def toml_config_file(tmp_path):
+    conf_file = tmp_path / "config_file.toml"
+    with open(conf_file, "w") as fl:
+        toml.dump(dummy_js, fl)
+    return conf_file
+
+
+def tml_config_file(tmp_path):
+    conf_file = tmp_path / "config_file.tml"
+    with open(conf_file, "w") as fl:
+        toml.dump(dummy_js, fl)
+    return conf_file
+
+
+def json_config_file(tmp_path):
     conf_file = tmp_path / "config_file.json"
     with open(conf_file, "w") as fl:
         json.dump(dummy_js, fl)
     return conf_file
+
+
+@pytest.fixture(params=[toml_config_file, json_config_file, tml_config_file])
+def config_file(request, tmp_path):
+    return request.param(tmp_path)
 
 
 @pytest.fixture
@@ -100,3 +120,23 @@ def test_save_pydantic(tmp_path):
 
     save_config(config, new_file)
     assert new_file.exists()
+
+
+def test_save_toml(tmp_path):
+    """Save a toml file and load it again."""
+    toml_file = tmp_path / "config.toml"
+
+    config = conf.NestedConfig()
+    expected = config.dict()
+
+    save_toml(config, toml_file)
+
+    assert toml_file.exists()
+
+    new_config = conf.NestedConfig.load_config(toml_file)
+    assert isinstance(new_config.c, DummyConfig)
+
+    result = new_config.dict()
+
+    assert result["a"] == expected["a"]
+    assert result["pth"] == expected["pth"]

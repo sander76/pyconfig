@@ -9,5 +9,5 @@ author-email = "no_mail@nomail.com"
 home-page = "https://github.com/sander76/pyconfig"
 description-file="readme.md"
 classifiers = ["License :: OSI Approved :: MIT License"]
-requires = ["pydantic >= 0.32"]
+requires = ["pydantic >= 0.32","toml"]
 requires-python = ">=3.6"
