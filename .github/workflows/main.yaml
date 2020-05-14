@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: master
+
+jobs:
+  test:
+    name: test w/ Python ${{ matrix.python-version }}
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.6","3.7","3.8"]
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install nox
+      - run: nox --session tests-${{ matrix.python-version }}
+        env:
+          PYTHONDEVMODE: 1
+      - uses: codecov/codecov-action@v1
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./cov.xml

@@ -1,0 +1,11 @@
+a = 1
+
+[[a_list]]
+b = 1
+
+[[a_list]]
+val = true
+
+# Checking if comments don't break stuff.
+#[[a_list]]
+#val= false

@@ -6,6 +6,7 @@ Configuration management using pydantic and a bit of sugar.
 
 This library provides a load and save method for pydantic config settings.
 
+Settings can be saved in `.json` and `.toml` format. The latter is experimental.
 
 ```python
 """Small example"""

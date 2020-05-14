@@ -1,14 +1,15 @@
 import json
 import logging
 from json import JSONDecodeError
-import toml
 from os import PathLike
-from pathlib import Path, WindowsPath, PosixPath, PurePath
-from typing import Type, Optional, Union, Any, Callable, cast
+from pathlib import Path
+from typing import Optional, Union
 
+import toml
 from pydantic import BaseSettings, ValidationError
-from toml import TomlDecodeError
-from toml.encoder import TomlEncoder, _dump_str
+from toml.decoder import TomlDecodeError
+
+from pydantic_loader.encode import encode_pydantic_obj
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,31 +42,12 @@ def _load_json(config_file: Union[Path, PathLike]) -> dict:
 
 
 def _load_toml(config_file: Union[Path, PathLike]) -> dict:
-    with open(config_file) as fl:
-        try:
+    try:
+        with open(config_file) as fl:
             dct = toml.load(fl)
             return dct
-        except TomlDecodeError as err:
-            _LOGGER.exception(err)
-            raise CfgError("Problem parsing toml file %s", err)
-
-        except TypeError as err:
-            _LOGGER.exception(err)
-            raise CfgError("Type error occurred see log.")
-
-
-class PyTomlEncoder(TomlEncoder):
-    def __init__(self, _dict=dict):
-        super().__init__(_dict)
-        self.dump_funcs[PydanticConfig] = lambda v: v.dict()
-
-    def _dump_pathlib_path(self, v):
-        return _dump_str(str(v))
-
-    def dump_value(self, v):
-        if isinstance(v, PurePath):
-            v = str(v)
-        return super().dump_value(v)
+    except TomlDecodeError as err:
+        raise CfgError(str(err))
 
 
 class PydanticConfig(BaseSettings):
@@ -106,29 +88,21 @@ class PydanticConfig(BaseSettings):
             instance = cls()
         return instance
 
-    def toml(
-        self,
-        *,
-        include: Union["SetIntStr", "DictIntStrAny"] = None,
-        exclude: Union["SetIntStr", "DictIntStrAny"] = None,
-        by_alias: bool = False,
-        skip_defaults: bool = False,
-        **dumps_kwargs: Any,
-    ) -> str:
+    def toml(self) -> str:
         """
-        Generate a JSON representation of the model, `include` and `exclude` arguments as per `dict()`.
+        Generate a TOML representation of the model.
 
-        `encoder` is an optional function to supply as `default` to json.dumps(), other arguments as per `json.dumps()`.
+        Raises:
+            CfgError when object cannot be serialized.
         """
-        return toml.dumps(
-            self.dict(
-                include=include,
-                exclude=exclude,
-                by_alias=by_alias,
-                skip_defaults=skip_defaults,
-            ),
-            encoder=PyTomlEncoder(),
-        )
+        dct = encode_pydantic_obj(self)
+        try:
+            val = toml.dumps(dct)
+            return val
+        except Exception as err:
+            print(err)
+        except TomlDecodeError as err:
+            raise CfgError(err)
 
 
 def save_config(config: PydanticConfig, config_file: Path):
@@ -146,6 +120,5 @@ def save_config(config: PydanticConfig, config_file: Path):
 def save_toml(config: PydanticConfig, config_file: Path):
     """Serialize the config class and save it as a toml file."""
     config_file.parent.mkdir(exist_ok=True)
-
     with open(config_file, "w") as fl:
         fl.write(config.toml())
