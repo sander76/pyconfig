@@ -64,6 +64,13 @@ def config_file(request, tmp_path):
     return request.param(tmp_path)
 
 
+@pytest.fixture(
+    params=[conf.NestedConfig, conf.SomeConfig, conf.ConfigWithNone, conf.ConfigWithSet]
+)
+def pydantic_config(request):
+    return request.param()
+
+
 @pytest.fixture
 def invalid_config_file(tmp_path):
     conf_file = tmp_path / "config_file.json"
@@ -137,21 +144,17 @@ def test_save_pydantic(tmp_path):
     assert new_file.exists()
 
 
-@pytest.mark.parametrize(
-    "config", [conf.NestedConfig, conf.SomeConfig, conf.ConfigWithNone]
-)
-def test_save_toml(config, tmp_path):
+def test_save_toml(pydantic_config, tmp_path):
     """Save a toml file and load it again."""
     toml_file = tmp_path / "config.toml"
 
-    a_config = config()
-    save_toml(a_config, toml_file)
+    save_toml(pydantic_config, toml_file)
 
     assert toml_file.exists()
 
-    new_config = config.load_config(toml_file)
+    new_config = pydantic_config.load_config(toml_file)
 
-    assert a_config == new_config
+    assert pydantic_config == new_config
 
 
 @pytest.mark.parametrize("config", [conf.TomlFailConfig])
@@ -179,17 +182,13 @@ def test_encode_value():
     assert dct["dummy"] == DICT_DUMMY_CONFIG
 
 
-@pytest.mark.parametrize(
-    "config", [conf.NestedConfig, conf.SomeConfig, conf.ConfigWithNone]
-)
-def test_compare_to_dicts(config):
+def test_compare_to_dicts(pydantic_config):
     """Compare dicts when done using custom function and with implemented .dict()"""
 
     # create a json string from the encode_pydantic_obj
-    _config = config()
-    result = json.dumps(encode_pydantic_obj(_config))
+    result = json.dumps(encode_pydantic_obj(pydantic_config))
 
     # create a json string from the built in pydantic json method.
-    expected = _config.json()
+    expected = pydantic_config.json()
 
     assert result == expected

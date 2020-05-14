@@ -1,6 +1,6 @@
 import logging
 from typing import Any
-
+from collections import abc
 from pydantic.json import pydantic_encoder
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,24 +27,10 @@ def encode_pydantic_obj(obj: Any) -> Any:
     try:
         result = pydantic_encoder(obj)
     except TypeError:
-        if any(
-            (
-                obj is None,
-                isinstance(obj, str),
-                isinstance(obj, bool),
-                isinstance(obj, int),
-                isinstance(obj, float),
-                isinstance(obj, bytes),
-            )
-        ):
-            return obj
-        elif isinstance(obj, dict):
-            return loop_over_dict(obj)
-        elif isinstance(obj, list):
-            return loop_over_list(obj)
-        else:
-            raise
-    else:
-        if isinstance(result, dict):
-            return loop_over_dict(result)
-        return encode_pydantic_obj(result)
+        result = obj
+
+    if isinstance(result, abc.Mapping):
+        return loop_over_dict(result)
+    if isinstance(result, abc.Iterable) and not isinstance(result, str):
+        return loop_over_list(result)
+    return result

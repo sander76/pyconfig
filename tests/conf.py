@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Set
 
 from pydantic_loader.config import PydanticConfig
 
@@ -12,6 +12,11 @@ _LOGGER = logging.getLogger(__name__)
 class TableArray(PydanticConfig):
     a: int = 1
     a_list: list = [{"a": 1}, {"b": True}]
+
+
+class SimpleConfig(PydanticConfig):
+    a: int = 1
+    b: str = "A string"
 
 
 class SomeConfig(PydanticConfig):
@@ -54,6 +59,10 @@ CONFIG: SomeConfig
 
 class ConfigWithNone(PydanticConfig):
     a: Optional[int] = None
+
+
+class ConfigWithSet(PydanticConfig):
+    a: set = {1, 2, 3}
 
 
 class TomlFailConfig(PydanticConfig):
