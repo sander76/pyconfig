@@ -1,3 +1,5 @@
+"""Pydantic config handling."""
+
 import json
 import logging
 from json import JSONDecodeError
@@ -17,6 +19,8 @@ __all__ = ["CfgError", "PydanticConfig", "save_config"]
 
 
 class CfgError(Exception):
+    """Config error."""
+
     pass
 
 
@@ -107,7 +111,6 @@ class PydanticConfig(BaseSettings):
 
 def save_config(config: PydanticConfig, config_file: Path):
     """Serialize the config class and save it."""
-
     config_file.parent.mkdir(exist_ok=True)
 
     if config_file.suffix in (".toml", ".tml"):
