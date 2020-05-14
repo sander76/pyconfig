@@ -4,11 +4,12 @@ from importlib import reload
 
 import pytest
 import toml
+
 from pydantic_loader import save_config
 from pydantic_loader.config import CfgError, save_toml
 from pydantic_loader.encode import encode_pydantic_obj
 from tests import conf
-from tests.conf import SomeConfig, DICT_DUMMY_CONFIG, DICT_NESTED_CONFIG
+from tests.conf import DICT_DUMMY_CONFIG, DICT_NESTED_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,7 +137,9 @@ def test_save_pydantic(tmp_path):
     assert new_file.exists()
 
 
-@pytest.mark.parametrize("config", [conf.NestedConfig, conf.SomeConfig])
+@pytest.mark.parametrize(
+    "config", [conf.NestedConfig, conf.SomeConfig, conf.ConfigWithNone]
+)
 def test_save_toml(config, tmp_path):
     """Save a toml file and load it again."""
     toml_file = tmp_path / "config.toml"
@@ -176,14 +179,17 @@ def test_encode_value():
     assert dct["dummy"] == DICT_DUMMY_CONFIG
 
 
-def test_compare_to_dicts():
+@pytest.mark.parametrize(
+    "config", [conf.NestedConfig, conf.SomeConfig, conf.ConfigWithNone]
+)
+def test_compare_to_dicts(config):
     """Compare dicts when done using custom function and with implemented .dict()"""
 
     # create a json string from the encode_pydantic_obj
-    config = conf.NestedConfig()
-    result = json.dumps(encode_pydantic_obj(config))
+    _config = config()
+    result = json.dumps(encode_pydantic_obj(_config))
 
     # create a json string from the built in pydantic json method.
-    expected = config.json()
+    expected = _config.json()
 
     assert result == expected

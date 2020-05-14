@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import Optional
 
 from pydantic_loader.config import PydanticConfig
 
@@ -49,6 +50,10 @@ DICT_NESTED_CONFIG = {
 }
 
 CONFIG: SomeConfig
+
+
+class ConfigWithNone(PydanticConfig):
+    a: Optional[int] = None
 
 
 class TomlFailConfig(PydanticConfig):

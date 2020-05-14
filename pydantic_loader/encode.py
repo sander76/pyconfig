@@ -29,6 +29,7 @@ def encode_pydantic_obj(obj: Any) -> Any:
     except TypeError:
         if any(
             (
+                obj is None,
                 isinstance(obj, str),
                 isinstance(obj, bool),
                 isinstance(obj, int),
