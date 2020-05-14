@@ -17,5 +17,5 @@ requires = ["pydantic >= 0.32","toml>=0.10.1"]
 requires-python = ">=3.6"
 
 [tool.flit.metadata.requires-extra]
-test = ["pytest","pytest-asyncio","pytest-aiohttp"]
+test = ["pytest"]
 dev = ["pytest-cov","pylint","coverage[toml]>=5.0.3"]
