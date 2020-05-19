@@ -25,7 +25,8 @@ def _loop_over_dict(obj) -> dict:
 def encode_pydantic_obj(obj: Any) -> Any:
     """Take an object and encode it to basic python types iteratively.
 
-    The result should be ready to be encoded to TOML (Or another data type).
+    The result should be ready to be encoded to TOML (Or another data type) without
+    the need for a special encoder.
     """
     try:
         result = pydantic_encoder(obj)

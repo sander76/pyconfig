@@ -1,9 +1,9 @@
 import json
 import logging
-from importlib import reload
 
 import pytest
 import toml
+from pydantic import BaseSettings
 
 from pydantic_loader import save_config
 from pydantic_loader.config import CfgError, save_toml
@@ -64,72 +64,61 @@ def config_file(request, tmp_path):
     return request.param(tmp_path)
 
 
+def invalid_simple_config_file(tmp_path):
+    false_dict = {"invalid_key": "abc"}
+    file = tmp_path / "false_json.json"
+    with open(file, "w") as fl:
+        json.dump(false_dict, fl)
+    return file
+
+
+def non_existing_config_file(tmp_path):
+    return tmp_path / "non_exist.json"
+
+
+@pytest.fixture(params=[invalid_simple_config_file, non_existing_config_file])
+def invalid_config_files(request, tmp_path):
+    return request.param(tmp_path)
+
+
 @pytest.fixture(
-    params=[conf.NestedConfig, conf.SomeConfig, conf.ConfigWithNone, conf.ConfigWithSet]
+    params=[
+        conf.NestedConfig,
+        conf.SomeConfig,
+        conf.ConfigWithNone,
+        conf.ConfigWithSet,
+        conf.ConfigWithPydanticTypes,
+    ]
 )
 def pydantic_config(request):
     return request.param()
 
 
-@pytest.fixture
-def invalid_config_file(tmp_path):
-    conf_file = tmp_path / "config_file.json"
-    with open(conf_file, "w") as fl:
-        json.dump(invalid_dummy_js, fl)
-    return conf_file
-
-
-def test_unspecified_config():
-    # todo: reloading does not work. once conf.CONFIG is defined it does not get reset.
-    reload(conf)
-    with pytest.raises(AttributeError):
-        config = conf.CONFIG
-
-
 def test_load_config_success(config_file):
-    conf.CONFIG = conf.SomeConfig.load_config(config_file)
-    assert isinstance(conf.CONFIG, conf.SomeConfig)
+    result = conf.SomeConfig.load_config(config_file)
+    assert isinstance(result, conf.SomeConfig)
 
 
-def test_load_config_not_found(tmp_path):
-    """A non existing file is provided. Should return default config"""
-
-    non_existing_config = tmp_path / "non_exist.json"
+def test_load_config_non_exist_return_default(invalid_config_files):
+    """False config file is provided. Should return default config"""
 
     _cfg = conf.SomeConfig.load_config(
-        non_existing_config, on_error_return_default=True
+        invalid_config_files, on_error_return_default=True
     )
+    assert isinstance(_cfg, conf.SomeConfig)
 
-    validate_equivalence(_cfg)
 
-
-def test_load_config_not_found_throw(tmp_path):
-    """A non existing file is provided. Should raise exceptoin"""
-
-    non_existing_config = tmp_path / "non_exist.json"
+def test_load_config_fail_throw(invalid_config_files):
+    """An invalid confing file is provided. Should raise exceptoin"""
 
     with pytest.raises(CfgError):
-        conf.SomeConfig.load_config(non_existing_config)
+        conf.SomeConfig.load_config(invalid_config_files)
 
 
 def test_load_config_file_success(config_file):
     _cfg = conf.SomeConfig.load_config(config_file)
     assert _cfg.a == dummy_js["a"]
     assert _cfg.b == dummy_js["b"]
-
-
-def test_load_invalid_config(invalid_config_file):
-    """Load an invalid config. Should return a default value"""
-    _cfg = conf.SomeConfig.load_config(
-        invalid_config_file, on_error_return_default=True
-    )
-    validate_equivalence(_cfg)
-
-
-def test_load_invalid_config_raise(invalid_config_file):
-    """Load an invalid config. Should raise a vaildation error."""
-    with pytest.raises(CfgError):
-        conf.SomeConfig.load_config(invalid_config_file)
 
 
 def test_save_pydantic(tmp_path):
@@ -192,3 +181,12 @@ def test_compare_to_dicts(pydantic_config):
     expected = pydantic_config.json()
 
     assert result == expected
+
+
+#
+# def test_frozen_set():
+#     class Frozen(BaseSettings):
+#         a_set: frozenset
+#
+#     dct = {"a_set": [1, 2, 3]}
+#     frozen = Frozen(**dct)

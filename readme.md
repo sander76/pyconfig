@@ -11,7 +11,7 @@ Settings can be saved in `.json` and `.toml` format. The latter is experimental.
 
 ```python
 """Small example"""
-from pydantic_loader import PydanticConfig
+from pydantic_loader import PydanticConfig,load_config
 
 
 class DummyConfig(PydanticConfig):
@@ -29,4 +29,15 @@ config = DummyConfig.load_config("a json config file.json")
 # Providing a non existing file will raise a CfgError
 # It will return a default instance of the config class when on_error_return_default=True
 config = DummyConfig.load_config("invalid_file.json", on_error_return_default=True)
+
+# Using the load_config allows for loading pydantic `BaseSettings` class
+config = load_config(DummyConfig,"Json or Toml config file.")
+
+# SAVE A CONFIG
+
+from pydantic_loader import save_config
+
+# Your config file should have the extension .toml, .tml or .json to determine how to encode
+# the pydantic instance.
+save_config(config,"a json or toml config file")
 ```

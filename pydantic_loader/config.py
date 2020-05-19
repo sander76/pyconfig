@@ -15,13 +15,11 @@ from pydantic_loader.encode import encode_pydantic_obj
 
 _LOGGER = logging.getLogger(__name__)
 
-__all__ = ["CfgError", "PydanticConfig", "save_config"]
+__all__ = ["CfgError", "PydanticConfig", "save_config", "load_config"]
 
 
 class CfgError(Exception):
     """Config error."""
-
-    pass
 
 
 def _load(config_file: Union[Path, PathLike]) -> dict:
@@ -74,23 +72,9 @@ class PydanticConfig(BaseSettings):
         raises:
             CfgError when loading fails and on_error_return_default is False.
         """
-        conf_data = {}
-        if config_file is not None:
-            try:
-                conf_data = _load(config_file)
-            except CfgError as err:
-                if not on_error_return_default:
-                    raise
-                else:
-                    _LOGGER.error(f"{err} LOADING DEFAULTS ")
-        try:
-            instance = cls(**conf_data)
-        except ValidationError as err:
-            _LOGGER.error(err)
-            if not on_error_return_default:
-                raise CfgError(str(err))
-            instance = cls()
-        return instance
+        return load_config(
+            cls, config_file, on_error_return_default=on_error_return_default
+        )
 
     def toml(self) -> str:
         """
@@ -99,14 +83,45 @@ class PydanticConfig(BaseSettings):
         Raises:
             CfgError when object cannot be serialized.
         """
-        dct = encode_pydantic_obj(self)
-        try:
-            val = toml.dumps(dct)
-            return val
-        except Exception as err:
-            print(err)
-        except TomlDecodeError as err:
-            raise CfgError(err)
+        return _toml(self)
+
+
+def load_config(
+    pydantic_obj, config_file: Optional[Path], on_error_return_default=False
+):
+    """Load a json config file and merge it into the config class.
+
+    Args:
+        pydantic_obj: A pydantic class to instantiate
+        config_file: An optional config json file location.
+        on_error_return_default: By default loading is forgiving. On failure it will load
+            default settings. Otherwise it will raise CfgError.
+
+    Returns:
+        A config instance
+
+    raises:
+        CfgError when loading fails and on_error_return_default is False.
+    """
+    if config_file is None:
+        return pydantic_obj()
+
+    conf_data = {}
+    try:
+        conf_data = _load(config_file)
+    except CfgError as err:
+        if not on_error_return_default:
+            raise
+        else:
+            _LOGGER.error(f"{err} LOADING DEFAULTS ")
+    try:
+        instance = pydantic_obj(**conf_data)
+    except ValidationError as err:
+        _LOGGER.error(err)
+        if not on_error_return_default:
+            raise CfgError(str(err))
+        instance = pydantic_obj()
+    return instance
 
 
 def save_config(config: PydanticConfig, config_file: Path):
@@ -120,8 +135,20 @@ def save_config(config: PydanticConfig, config_file: Path):
             fl.write(config.json(indent=4))
 
 
+def _toml(config):
+    dct = encode_pydantic_obj(config)
+    try:
+        val = toml.dumps(dct)
+        return val
+    except Exception as err:
+        print(err)
+    except TomlDecodeError as err:
+        raise CfgError(err)
+
+
 def save_toml(config: PydanticConfig, config_file: Path):
     """Serialize the config class and save it as a toml file."""
+
     config_file.parent.mkdir(exist_ok=True)
     with open(config_file, "w") as fl:
-        fl.write(config.toml())
+        fl.write(_toml(config))
