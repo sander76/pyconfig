@@ -1,4 +1,4 @@
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+from pydantic import BaseSettings[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![codecov](https://codecov.io/gh/sander76/pyconfig/branch/master/graph/badge.svg)](https://codecov.io/gh/sander76/pyconfig)
 
 # PyConfig
@@ -9,35 +9,33 @@ This library provides a load and save method for pydantic config settings.
 
 Settings can be saved in `.json` and `.toml` format. The latter is experimental.
 
+# Installation
+
+`pip install pydantic_loader` for loading and saving json files.
+
+`pip install pydantic_loader[yaml]` for loading and saving yaml and json files.
+
+`pip install pydantic_loader[toml]` for loading and saving toml and json.
+
+
 ```python
-"""Small example"""
-from pydantic_loader import PydanticConfig,load_config
+"""Simple example."""
+from pathlib import Path
+
+from pydantic_loader import load_json, save_json
+from pydantic import BaseSettings
 
 
-class DummyConfig(PydanticConfig):
-    """An app configuration class
-    
-    Define this class according to pydantic BaseSettings.
-    """
+class DummyConfig(BaseSettings):
+    """An app configuration class"""
 
     a: int = 1
     b: str = "ABC"
 
-# Load a json file with config data and include it in the DummyConfig.
-config = DummyConfig.load_config("a json config file.json")
 
-# Providing a non existing file will raise a CfgError
-# It will return a default instance of the config class when on_error_return_default=True
-config = DummyConfig.load_config("invalid_file.json", on_error_return_default=True)
+config = DummyConfig()
 
-# Using the load_config allows for loading pydantic `BaseSettings` class
-config = load_config(DummyConfig,"Json or Toml config file.")
+save_json(config, Path("config.json"))
 
-# SAVE A CONFIG
-
-from pydantic_loader import save_config
-
-# Your config file should have the extension .toml, .tml or .json to determine how to encode
-# the pydantic instance.
-save_config(config,"a json or toml config file")
+config = load_json(DummyConfig, Path("config.json"))
 ```

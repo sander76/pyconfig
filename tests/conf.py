@@ -17,22 +17,21 @@ from pydantic import BaseSettings, SecretStr
 from pydantic.color import Color
 import datetime
 
-from pydantic_loader.config import PydanticConfig
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TableArray(PydanticConfig):
+class TableArray(BaseSettings):
     a: int = 1
     a_list: list = [{"a": 1}, {"b": True}]
 
 
-class SimpleConfig(PydanticConfig):
+class SimpleConfig(BaseSettings):
     a: int = 1
     b: str = "A string"
 
 
-class SomeConfig(PydanticConfig):
+class SomeConfig(BaseSettings):
     a: int = 1
     b: str = "ABC"
     a_list: list = [
@@ -45,7 +44,7 @@ class SomeConfig(PydanticConfig):
 DICT_DUMMY_CONFIG = {"a": 1, "b": "ABC", "a_list": [1, 2, 3]}
 
 
-class NestedConfig(PydanticConfig):
+class NestedConfig(BaseSettings):
     a: int = 1
     b: str = "ABC"
     dummy: SomeConfig = SomeConfig()
@@ -68,15 +67,15 @@ DICT_NESTED_CONFIG = {
 }
 
 
-class ConfigWithNone(PydanticConfig):
+class ConfigWithNone(BaseSettings):
     a: Optional[int] = None
 
 
-class ConfigWithSet(PydanticConfig):
+class ConfigWithSet(BaseSettings):
     a: set = {1, 2, 3}
 
 
-class TomlFailConfig(PydanticConfig):
+class TomlFailConfig(BaseSettings):
     """this config will fail as it has an inhomogenous array."""
 
     a: int = 1
@@ -93,7 +92,7 @@ class MyEnum(Enum):
     snap = "crackle"
 
 
-class ConfigWithPydanticTypes(PydanticConfig):
+class ConfigWithPydanticTypes(BaseSettings):
     uuid: UUID = "ebcdab58-6eb8-46fb-a190-d07a33e9eac8"
     ip_4_address: IPv4Address = IPv4Address("192.168.0.1")
     # color: Color = Color("#000")

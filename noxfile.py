@@ -10,3 +10,9 @@ def install_flit_dev_deps(session):
 def tests(session):
     install_flit_dev_deps(session)
     session.run("pytest", "--cov=pydantic_loader", "--cov-report=xml:cov.xml", "tests")
+
+
+@nox.session(python=["3.7"])
+def pylint(session):
+    install_flit_dev_deps(session)
+    session.run("pylint", "pydantic_loader")

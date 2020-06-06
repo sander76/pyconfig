@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 from collections import abc
-from pydantic.json import pydantic_encoder
+import pydantic.json
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,8 @@ def encode_pydantic_obj(obj: Any) -> Any:
     the need for a special encoder.
     """
     try:
-        result = pydantic_encoder(obj)
+        # pylint: disable=c-extension-no-member
+        result = pydantic.json.pydantic_encoder(obj)
     except TypeError:
         result = obj
 

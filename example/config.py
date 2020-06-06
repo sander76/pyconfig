@@ -1,12 +1,7 @@
-"""App config file.
+"""Simple example."""
+from pathlib import Path
 
-Usage:
-
-- Define your pydantic config objects here.
-- Set a parameter to which the config will be instantiated. Actual assignment will
-  take place in -for example- the app.py file.
-"""
-
+from pydantic_loader import load_json, save_json
 from pydantic import BaseSettings
 
 
@@ -17,5 +12,8 @@ class DummyConfig(BaseSettings):
     b: str = "ABC"
 
 
-# The parameter to which the above instance will be assigned to.
-CONFIG: DummyConfig
+config = DummyConfig()
+
+save_json(config, Path("config.json"))
+
+config = load_json(DummyConfig, Path("config.json"))
