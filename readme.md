@@ -1,13 +1,12 @@
-from pydantic import BaseSettings[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![codecov](https://codecov.io/gh/sander76/pyconfig/branch/master/graph/badge.svg)](https://codecov.io/gh/sander76/pyconfig)
 
 # PyConfig
 
 Configuration management using pydantic and a bit of sugar.
 
-This library provides a load and save method for pydantic config settings.
-
-Settings can be saved in `.json` and `.toml` format. The latter is experimental.
+This library provides a load and save functions to load and save serialized pydantic settings.
+Settings can be saved in `.json`, `.yaml` and `.toml` format.
 
 # Installation
 
