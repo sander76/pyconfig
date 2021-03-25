@@ -6,5 +6,5 @@ pydantic==0.32
 pylint
 nox
 toml
-pyyaml==5.3.1
+pyyaml==5.4
 mocker
