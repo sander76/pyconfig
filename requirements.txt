@@ -2,7 +2,7 @@ pytest
 pytest-mock
 pre-commit
 flit
-pydantic==0.32
+pydantic==1.6.2
 pylint
 nox
 toml
